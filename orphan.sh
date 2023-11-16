@@ -11,13 +11,13 @@ do
 	do
 		echo "${account[$c]}[$REGION]"
 		echo "==================================================="
-		snapshot="aws ec2 --profile "${account[$c]}"  --region "$REGION" describe-snapshots --owner-ids self --query \"Snapshots[?StartTime<'$(date --date='-1 month' '+%Y-%m-%d')'].SnapshotId\" --output text | tr '\t' '\n' | sort"
+		snapshot="aws ec2 --region "$REGION" describe-snapshots --owner-ids self --query \"Snapshots[?StartTime<'$(date --date='-1 month' '+%Y-%m-%d')'].SnapshotId\" --output text | tr '\t' '\n' | sort"
 		echo $snapshot|bash>>"snapshot_${account[$c]}_$REGION".txt
 		if [ -s "snapshot_${account[$c]}_$REGION".txt ]
 		then
 			echo $snapshot
-			snapshotvolume="aws ec2 --profile "${account[$c]}" --region "$REGION" describe-volumes --query 'Volumes[*].SnapshotId' --output text | tr '\t' '\n' | sort | uniq"
-			snapshotami="aws ec2 --profile "${account[$c]}" --region "$REGION" describe-images --filters Name=state,Values=available --owners self --query "Images[*].BlockDeviceMappings[*].Ebs.SnapshotId" --output text | tr '\t' '\n' | sort | uniq"
+			snapshotvolume="aws ec2 --region "$REGION" describe-volumes --query 'Volumes[*].SnapshotId' --output text | tr '\t' '\n' | sort | uniq"
+			snapshotami="aws ec2 --region "$REGION" describe-images --filters Name=state,Values=available --owners self --query "Images[*].BlockDeviceMappings[*].Ebs.SnapshotId" --output text | tr '\t' '\n' | sort | uniq"
 			echo $snapshotvolume|bash>>"ssvolumeami_${account[$c]}_$REGION".txt | echo $snapshotami|bash>>"ssvolumeami_${account[$c]}_$REGION".txt
 			if [ -s "ssvolumeami_${account[$c]}_$REGION".txt ]
 			then
