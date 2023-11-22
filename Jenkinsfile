@@ -6,51 +6,49 @@ pipeline {
     }
 
     stages {
-        
-        /*//This cleanup will only be used when label 'built-in' is used 
+        /*
+        //This cleanup will only be used when label 'built-in' is used 
         stage('Initial Clean Workspace') {
             agent {
                 label "built-in"
             }  
             steps {
-            cleanWs()
+                cleanWs()
             }
-        }*/
+        }
+        */
+
         stage('Build Package') {
             agent {
                 label "cloud-agent-1"
             }  
             steps {
                 script {
-                    
-                    //create jenkinsconfig and application directory                
+                    // Create jenkinsconfig and application directory                
                     sh '''
                     mkdir -p "${WORKSPACE}/jenkinsconfig"
                     mkdir -p "${WORKSPACE}/application"
                     '''
-                    
-                    //checkout jenkins configuration files
+
+                    // Checkout jenkins configuration files
                     dir("${WORKSPACE}/jenkinsconfig") {
                         sshagent(['cup-gitlab']) {
-                           git branch: 'master', credentialsId: 'cup-gitlab', url: 'git@cup-gitlab.cambridge.org:bnr-education/tng-go.git'
+                            git branch: 'master', credentialsId: 'cup-gitlab', url: 'git@cup-gitlab.cambridge.org:bnr-education/tng-go.git'
                         }
                     }
-                    
-                    
+
                     // Loading and executing the config script
                     def configScript = load "${WORKSPACE}/jenkinsconfig/extract.groovy"
                     configScript.Extract()
-                    
-                    
-                    //Create RPM package
-                    sh """
-                        ls -la ${WORKSPACE}
-                        pwd
-                        chmod 755 jenkinsconfig/rpmcreation.sh
-                        ./jenkinsconfig/rpmcreation.sh
-                        """
 
-                    
+                    // Create RPM package
+                    sh """
+                    ls -la ${WORKSPACE}
+                    pwd
+                    chmod 755 jenkinsconfig/rpmcreation.sh
+                    ./jenkinsconfig/rpmcreation.sh
+                    """
+
                     // Push to S3
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'backoffice-nonprod']]) {
                         sh "aws s3 cp $WORKSPACE/application/RPMS/noarch/${PACKAGE_NAME}-${VERSION}-${BUILD_NUMBER}.noarch.rpm s3://bnr-jenkins/package-repository/${PACKAGE_NAME}-${VERSION}-${BUILD_NUMBER}.noarch.rpm --region eu-west-1"
@@ -59,39 +57,34 @@ pipeline {
                 }
             }
         }
-        stage ('Copy RPM from S3') {
+
+        stage ('Deploy on Staging') {
             agent {
                 label 'built-in'
             }
             steps {
-                input message: 'Approval to Copy from S3', submitter: 'Dom AWS Admins'
+                input message: 'Approval to Deploy on Staging', submitter: 'Dom AWS Admins'
             }
         }
-        stage ('RPM') {
-            parallel {
-                stage ('Downloading RPM from S3') {
-                    agent {
-                        label 'cloud-agent-1'
-                    }
-                    steps {
-                        script {
-                            withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'backoffice-nonprod']]) {
-                            sh "aws s3 cp s3://bnr-jenkins/package-repository/${PACKAGE_NAME}-${VERSION}-${BUILD_NUMBER}.noarch.rpm $WORKSPACE/application/RPMS/noarch/ --region eu-west-1"    
-                            }
-                        }
-                        
-                    } 
-            
-                }
-                stage ('Donwloading RPM for transfer') {
-                    agent {
-                        label 'built-in'
-                    }
-                    steps {
-                        echo 'Transfering RPM to other server'
+
+        stage ('Staging') {
+            agent {
+                label 'cloud-agent-1'
+            }
+            steps {
+                script {
+                    withCredentials([sshUserPrivateKey(credentialsId: 'ec2-user', keyFileVariable: 'SSH_KEY')]) {
+                        def remoteIp = '34.245.188.210'
+                        sh """
+                        ssh -o StrictHostKeyChecking=no -l ec2-user -i \${SSH_KEY} $remoteIp 'whoami'
+                        ssh -l ec2-user -i \${SSH_KEY} $remoteIp 'sudo yum clean all'
+                        ssh -l ec2-user -i \${SSH_KEY} $remoteIp 'sudo yum check-update || :'
+                        ssh -l ec2-user -i \${SSH_KEY} $remoteIp 'sudo yum -y remove cup-tng-go'
+                        ssh -l ec2-user -i \${SSH_KEY} $remoteIp 'sudo yum -y install cup-tng-go-${BUILD_NUMBER}'
+                        """
                     }
                 }
             }
         }
     }
-}        
+}
