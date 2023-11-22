@@ -16,12 +16,5 @@ if [ -d SPECS ]; then
 fi
 cp -rp $WORKSPACE/SPEC/. SPECS
 find SPECS -name .git | sed -e 's/^://' -e 's/$//' | xargs rm -rf
-'''
-
-sh '''
-#!/bin/bash
-
-# Enable error-sensitive shell
-set -e
 
 rpmbuild --define "_version ${VERSION}" --define "_release $BUILD_NUMBER" --define "_topdir $WORKSPACE" -bb SPECS/${PACKAGE_NAME}.spec
