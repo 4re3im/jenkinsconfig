@@ -11,5 +11,5 @@ export BRANCH="$branch"
 export REPO_URL="$repo_url"
 
 # Print the values
-echo "BRANCH: ${BRANCH}"
-echo "REPO_URL: $(REPO_URL}"
+echo "BRANCH: $BRANCH"
+echo "REPO_URL: $REPO_URL"
