@@ -10,3 +10,4 @@ env.REPO_URL = repo_url
 echo "BRANCH: ${env.BRANCH}"
 echo "REPO_URL: ${env.REPO_URL}"
 }
+return this
