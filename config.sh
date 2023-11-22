@@ -1,15 +1,9 @@
-# Read branch and repo_url from Branch.txt
-branch=$(grep '^branch=' "${WORKSPACE}/jenkinsconfig/Branch.txt" | cut -d'=' -f2)
-repo_url=$(grep '^giturl=' "${WORKSPACE}/jenkinsconfig/Branch.txt" | cut -d'=' -f2)
+def branch = sh(script: "cat ${WORKSPACE}/jenkinsconfig/Branch.txt | grep '^branch=' | cut -d'=' -f2", returnStdout: true).trim()
+def repo_url = sh(script: "cat ${WORKSPACE}/jenkinsconfig/Branch.txt | grep '^giturl=' | cut -d'=' -f2", returnStdout: true).trim()
 
-# Trim leading and trailing whitespaces
-branch=$(echo "$branch" | tr -d '[:space:]')
-repo_url=$(echo "$repo_url" | tr -d '[:space:]')
+env.BRANCH = branch
+env.REPO_URL = repo_url
 
-# Set environment variables
-export BRANCH="$branch"
-export REPO_URL="$repo_url"
-
-# Print the values
-echo "BRANCH: $BRANCH"
-echo "REPO_URL: $REPO_URL"
+// Print the values
+echo "BRANCH: ${env.BRANCH}"
+echo "REPO_URL: ${env.REPO_URL}"
