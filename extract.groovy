@@ -10,12 +10,14 @@ env.REPO_URL = repo_url
 echo "BRANCH: ${env.BRANCH}"
 echo "REPO_URL: ${env.REPO_URL}"
 
+dir("${WORKSPACE}/application"){
 sshagent(['sshgithub']) {
     git branch: env.BRANCH, credentialsId: 'sshgithub', url: env.REPO_URL
+    }
 }
 
-def version = sh(script: "cat ${WORKSPACE}/version.txt | grep '^version=' | cut -d'=' -f2", returnStdout: true).trim()
-def packageName = sh(script: "cat ${WORKSPACE}/version.txt | grep '^package=' | cut -d'=' -f2", returnStdout: true).trim()
+def version = sh(script: "cat ${WORKSPACE}/application/version.txt | grep '^version=' | cut -d'=' -f2", returnStdout: true).trim()
+def packageName = sh(script: "cat ${WORKSPACE}/application/version.txt | grep '^package=' | cut -d'=' -f2", returnStdout: true).trim()
 
 env.VERSION = version
 env.PACKAGE_NAME = packageName
