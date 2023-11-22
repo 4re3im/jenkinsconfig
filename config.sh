@@ -7,9 +7,9 @@ branch=$(echo "$branch" | tr -d '[:space:]')
 repo_url=$(echo "$repo_url" | tr -d '[:space:]')
 
 # Set environment variables
-export env.BRANCH="$branch"
+export BRANCH="$branch"
 export env.REPO_URL="$repo_url"
 
 # Print the values
-echo "BRANCH: ${env.BRANCH}"
-echo "REPO_URL: ${env.REPO_URL}"
+echo "BRANCH: ${BRANCH}"
+echo "REPO_URL: $(REPO_URL}"
