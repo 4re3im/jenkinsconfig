@@ -52,6 +52,7 @@ pipeline {
                     // Push to S3
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'backoffice-nonprod']]) {
                         sh "aws s3 cp $WORKSPACE/application/RPMS/noarch/${PACKAGE_NAME}-${VERSION}-${BUILD_NUMBER}.noarch.rpm s3://bnr-jenkins/package-repository/${PACKAGE_NAME}-${VERSION}-${BUILD_NUMBER}.noarch.rpm --region eu-west-1"
+                        sh "aws s3 rm s3://bnr-jenkins/package-repository/repodata --recursive --region eu-west-1"
                         sh "aws s3 sync $WORKSPACE/application/RPMS/noarch/repodata s3://bnr-jenkins/package-repository/repodata --region eu-west-1"
                     }
                 }
@@ -74,7 +75,7 @@ pipeline {
             steps {
                 script {
                     withCredentials([sshUserPrivateKey(credentialsId: 'ec2-user', keyFileVariable: 'SSH_KEY')]) {
-                        def remoteIp = '34.245.188.210'
+                        def remoteIp = '3.252.135.121'
                         sh """
                         ssh -o StrictHostKeyChecking=no -l ec2-user -i \${SSH_KEY} $remoteIp 'whoami'
                         ssh -l ec2-user -i \${SSH_KEY} $remoteIp 'sudo yum clean all'
