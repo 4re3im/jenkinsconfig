@@ -52,12 +52,25 @@ pipeline {
                     // Push to S3
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'backoffice-nonprod']]) {
                         sh "aws s3 cp $WORKSPACE/application/RPMS/noarch/${PACKAGE_NAME}-${VERSION}-${BUILD_NUMBER}.noarch.rpm s3://bnr-jenkins/package-repository/${PACKAGE_NAME}-${VERSION}-${BUILD_NUMBER}.noarch.rpm --region eu-west-1"
-                        sh "aws s3 rm s3://bnr-jenkins/package-repository/repodata --recursive --region eu-west-1"
-                        sh "aws s3 sync $WORKSPACE/application/RPMS/noarch/repodata s3://bnr-jenkins/package-repository/repodata --region eu-west-1"
                     }
                 }
             }
         }
+        stage ('Execute createrepo') {
+            agent {
+                label 'cloud-agent-1'
+            }
+            steps {
+                script {
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'backoffice-nonprod']]) {
+                        sh "aws s3 sync s3://bnr-jenkins/package-repository/ $WORKSPACE --region eu-west-1"
+                        sh """/usr/bin/createrepo_c $WORKSPACE"""
+                        sh "aws s3 sync $WORKSPACE s3://bnr-jenkins/package-repository/"
+                    }
+                }        
+            }
+        }
+            
 
         stage ('Deploy on Staging') {
             agent {
@@ -77,14 +90,11 @@ pipeline {
                     withCredentials([sshUserPrivateKey(credentialsId: 'ec2-user', keyFileVariable: 'SSH_KEY')]) {
                         def remoteIp = '3.252.135.121'
                         sh """
-                            ssh -o StrictHostKeyChecking=no -l ec2-user -i \${SSH_KEY} $remoteIp 'whoami'
-                            ssh -l ec2-user -i \${SSH_KEY} $remoteIp 'rm -rf /home/ec2-user/RPM_repository/*'
-                            ssh -l ec2-user -i \${SSH_KEY} $remoteIp 'aws s3 cp s3://bnr-jenkins/package-repository/cup-tng-go-${BUILD_NUMBER}.noarch.rpm /home/ec2-user/RPM_repository/'
-                            ssh -l ec2-user -i \${SSH_KEY} $remoteIp 'aws s3 sync s3://bnr-jenkins/package-repository/repodata /home/ec2-user/RPM_repository/repodata'
-                            ssh -l ec2-user -i \${SSH_KEY} $remoteIp 'sudo yum clean all'
-                            ssh -l ec2-user -i \${SSH_KEY} $remoteIp 'sudo yum check-update || :'
-                            ssh -l ec2-user -i \${SSH_KEY} $remoteIp 'sudo yum -y remove cup-tng-go'
-                            ssh -l ec2-user -i \${SSH_KEY} $remoteIp 'sudo yum -y install /home/ec2-user/RPM_repository/cup-tng-go-${BUILD_NUMBER}.noarch.rpm'
+                        ssh -o StrictHostKeyChecking=no -l ec2-user -i \${SSH_KEY} $remoteIp 'whoami'
+                        ssh -l ec2-user -i \${SSH_KEY} $remoteIp 'sudo yum clean all'
+                        ssh -l ec2-user -i \${SSH_KEY} $remoteIp 'sudo yum check-update || :'
+                        ssh -l ec2-user -i \${SSH_KEY} $remoteIp 'sudo yum -y remove cup-tng-go'
+                        ssh -l ec2-user -i \${SSH_KEY} $remoteIp 'sudo yum -y install cup-tng-go-${BUILD_NUMBER}'
                         """
                     }
                 }
