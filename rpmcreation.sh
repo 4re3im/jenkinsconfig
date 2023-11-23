@@ -20,4 +20,4 @@ find SPECS -name .git | sed -e 's/^://' -e 's/$//' | xargs rm -rf
 
 rpmbuild --define "_version $VERSION" --define "_release $BUILD_NUMBER" --define "_topdir $WORKSPACE/application" -bb SPECS/${PACKAGE_NAME}.spec
 
-/usr/bin/createrepo_c $WORKSPACE/application/RPMS/noarch
+#/usr/bin/createrepo_c $WORKSPACE/application/RPMS/noarch
