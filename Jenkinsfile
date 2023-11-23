@@ -92,7 +92,7 @@ pipeline {
                         sh """
                         ssh -o StrictHostKeyChecking=no -l ec2-user -i \${SSH_KEY} $remoteIp 'whoami'
                         ssh -l ec2-user -i \${SSH_KEY} $remoteIp 'sudo yum clean all'
-                        ssh -l ec2-user -i \${SSH_KEY} $remoteIP 'sudo rm -rf /var/cache/yum'
+                        ssh -l ec2-user -i \${SSH_KEY} $remoteIp 'sudo rm -rf /var/cache/yum'
                         ssh -l ec2-user -i \${SSH_KEY} $remoteIp 'sudo yum check-update || :'
                         ssh -l ec2-user -i \${SSH_KEY} $remoteIp 'sudo yum -y remove cup-tng-go'
                         ssh -l ec2-user -i \${SSH_KEY} $remoteIp 'sudo yum -y install cup-tng-go-${BUILD_NUMBER}'
