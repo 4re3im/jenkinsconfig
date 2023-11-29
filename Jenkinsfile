@@ -88,7 +88,7 @@ pipeline {
             steps {
                 script {
                     withCredentials([sshUserPrivateKey(credentialsId: 'ec2-user', keyFileVariable: 'SSH_KEY')]) {
-                        def remoteIp = '3.252.135.121'
+                        def remoteIp = '3.252.202.239'
                         sh """
                         ssh -o StrictHostKeyChecking=no -l ec2-user -i \${SSH_KEY} $remoteIp 'whoami'
                         ssh -l ec2-user -i \${SSH_KEY} $remoteIp 'sudo yum clean all'
