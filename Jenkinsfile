@@ -7,7 +7,7 @@ pipeline {
 
     stages {
         /*
-        //This cleanup will only be used when label 'built-in' is used 
+        // This cleanup will only be used when the label 'built-in' is used 
         stage('Initial Clean Workspace') {
             agent {
                 label "built-in"
@@ -56,6 +56,7 @@ pipeline {
                 }
             }
         }
+
         stage ('Execute createrepo') {
             agent {
                 label 'cloud-agent-1'
@@ -70,14 +71,30 @@ pipeline {
                 }        
             }
         }
-            
 
-        stage ('Deploy on Staging') {
+        stage('Deploy on Staging') {
             agent {
                 label 'built-in'
             }
             steps {
-                input message: 'Approval to Deploy on Staging', submitter: 'Dom AWS Admins'
+                script {
+                    // Get the current build number
+                    def currentBuildNumber = currentBuild.number
+
+                    // Check if there's a previous build
+                    if (currentBuildNumber > 1) {
+                        // Get information about the previous build
+                        def previousBuild = Jenkins.instance.getItemByFullName(env.JOB_NAME).getBuildByNumber(currentBuildNumber - 1)
+
+                        // Check if the previous build is waiting for input
+                        if (previousBuild.isBuilding() && previousBuild.getAction(ParametersAction) != null) {
+                            echo "Aborting previous build (#${previousBuild.number})"
+                            previousBuild.doStop()
+                        }
+                    }
+
+                    input message: 'Approval to Deploy on Staging', submitter: 'Dom AWS Admins'
+                }
             }
         }
 
