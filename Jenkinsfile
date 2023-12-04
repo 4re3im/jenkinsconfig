@@ -78,20 +78,6 @@ pipeline {
             }
             steps {
                 script {
-                    // Get the current build number
-                    def currentBuildNumber = currentBuild.number
-
-                    // Check if there's a previous build
-                    if (currentBuildNumber > 1) {
-                        // Get information about the previous build
-                        def previousBuild = Jenkins.instance.getItemByFullName(env.JOB_NAME).getBuildByNumber(currentBuildNumber - 1)
-
-                        // Check if the previous build is waiting for input
-                        if (previousBuild.isBuilding() && previousBuild.getAction(ParametersAction) != null) {
-                            echo "Aborting previous build (#${previousBuild.number})"
-                            build(job: env.JOB_NAME, parameters: [[$class: 'AbortBuild']])
-                        }
-                    }
 
                     input message: 'Approval to Deploy on Staging', submitter: 'Dom AWS Admins'
                 }
