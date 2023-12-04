@@ -19,29 +19,29 @@ pipeline {
         */
           
         stage('Abort Previous Build') {
-            agent {
-                label 'built-in'
-            }
-            steps {
-                script {
-                    def jobName = env.JOB_NAME
-                    def buildNumber = env.BUILD_NUMBER.toInteger()
-                    def currentJob = Jenkins.instance.getItemByFullName(jobName)
+    agent {
+        label 'built-in'
+    }
+    steps {
+        script {
+            def jobName = env.JOB_NAME
+            def buildNumber = env.BUILD_NUMBER.toInteger()
+            def currentJob = Jenkins.instance.getItemByFullName(jobName)
 
-                    for (def build : currentJob.builds) {
-                        def exec = build.getExecutor()
-                        if (build.isBuilding() && build.number.toInteger() != buildNumber && exec != null) {
-                            exec. interrupt(
-                                Result.ABORTED,
-                                new CauseofInterruption.UserInterruption("Job aborted by #${currentBuild.number}"
-                                )
-                            println("Job aborted previously running build #${build.number}")
-                            }
-                        }
-                    }
+            for (def build : currentJob.builds) {
+                def exec = build.getExecutor()
+                if (build.isBuilding() && build.number.toInteger() != buildNumber && exec != null) {
+                    exec.interrupt(
+                        Result.ABORTED,
+                        new CauseOfInterruption.UserInterruption("Job aborted by #${currentBuild.number}")
+                    )
+                    echo "Job aborted previously running build #${build.number}"
                 }
             }
         }
+    }
+}
+
 
         stage('Build Package') {
             agent {
