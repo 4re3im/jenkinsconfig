@@ -89,7 +89,7 @@ pipeline {
                         // Check if the previous build is waiting for input
                         if (previousBuild.isBuilding() && previousBuild.getAction(ParametersAction) != null) {
                             echo "Aborting previous build (#${previousBuild.number})"
-                            previousBuild.doStop()
+                            build(job: env.JOB_NAME, parameters: [[$class: 'AbortBuild']])
                         }
                     }
 
@@ -105,7 +105,7 @@ pipeline {
             steps {
                 script {
                     withCredentials([sshUserPrivateKey(credentialsId: 'ec2-user', keyFileVariable: 'SSH_KEY')]) {
-                        def remoteIp = '3.252.202.239'
+                        def remoteIp = '34.242.227.130'
                         sh """
                         ssh -o StrictHostKeyChecking=no -l ec2-user -i \${SSH_KEY} $remoteIp 'whoami'
                         ssh -l ec2-user -i \${SSH_KEY} $remoteIp 'sudo yum clean all'
