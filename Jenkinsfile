@@ -24,26 +24,25 @@ pipeline {
             }
             steps {
                 script {
-                    // Abort previous build if it is still in the queue
                     def currentBuildNumber = currentBuild.number
 
                     // Check if there's a previous build
                     if (currentBuildNumber > 1) {
-                        // Get information about the previous build
-                        def previousBuild = Jenkins.instance.getItemByFullName(env.JOB_NAME).getBuildByNumber(currentBuildNumber - 1)
+                        def previousBuildNumber = currentBuildNumber - 1
 
-                        // Check if the previous build is waiting for input
-                        if (previousBuild.isBuilding() && previousBuild.getAction(ParametersAction) != null) {
-                            echo "Aborting previous build (#${previousBuild.number})"
-                            previousBuild.doStop()
+                        def build = Jenkins.instance.getItemByFullName(env.JOB_NAME).getBuildByNumber(previousBuildNumber)
+                        if (build != null) {
+                            // Check if the previous build is waiting in the queue
+                            if (build.isBuilding() || build.isInQueue()) {
+                                echo "Aborting previous build (#${previousBuildNumber})"
+                                build.getExecutor().interrupt(Result.ABORTED)
+                            }
                         }
                     }
-
-                    // Wait for a few seconds to allow the previous build to stop
-                    sleep(10)
                 }
             }
         }
+
         stage('Build Package') {
             agent {
                 label "cloud-agent-1"
