@@ -25,30 +25,25 @@ pipeline {
             steps {
                 script {
                     // Abort previous build if it is still in the queue
-                    def abortPreviousBuild = {
-                        def currentBuildNumber = currentBuild.number
+                    def currentBuildNumber = currentBuild.number
 
-                        // Check if there's a previous build
-                        if (currentBuildNumber > 1) {
-                            // Get information about the previous build
-                            def previousBuild = Jenkins.instance.getItemByFullName(env.JOB_NAME).getBuildByNumber(currentBuildNumber - 1)
+                    // Check if there's a previous build
+                    if (currentBuildNumber > 1) {
+                        // Get information about the previous build
+                        def previousBuild = Jenkins.instance.getItemByFullName(env.JOB_NAME).getBuildByNumber(currentBuildNumber - 1)
 
-                            // Check if the previous build is waiting for input
-                            if (previousBuild.isBuilding() && previousBuild.getAction(ParametersAction) != null) {
-                                echo "Aborting previous build (#${previousBuild.number})"
-                                previousBuild.doStop()
-                            }
+                        // Check if the previous build is waiting for input
+                        if (previousBuild.isBuilding() && previousBuild.getAction(ParametersAction) != null) {
+                            echo "Aborting previous build (#${previousBuild.number})"
+                            previousBuild.doStop()
                         }
-
-                        // Wait for a few seconds to allow the previous build to stop
-                        sleep(10)
                     }
 
-                    abortPreviousBuild()
+                    // Wait for a few seconds to allow the previous build to stop
+                    sleep(10)
                 }
             }
         }
-        
         stage('Build Package') {
             agent {
                 label "cloud-agent-1"
