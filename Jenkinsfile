@@ -5,6 +5,26 @@ pipeline {
         skipDefaultCheckout()
     }
 
+    // Abort previous build if it is still in the queue
+    def abortPreviousBuild() {
+        def currentBuildNumber = currentBuild.number
+
+        // Check if there's a previous build
+        if (currentBuildNumber > 1) {
+            // Get information about the previous build
+            def previousBuild = Jenkins.instance.getItemByFullName(env.JOB_NAME).getBuildByNumber(currentBuildNumber - 1)
+
+            // Check if the previous build is waiting for input
+            if (previousBuild.isBuilding() && previousBuild.getAction(ParametersAction) != null) {
+                echo "Aborting previous build (#${previousBuild.number})"
+                previousBuild.doStop()
+            }
+        }
+
+        // Wait for a few seconds to allow the previous build to stop
+        sleep(10)
+    }
+
     stages {
         /*
         // This cleanup will only be used when the label 'built-in' is used 
@@ -17,7 +37,18 @@ pipeline {
             }
         }
         */
-
+        
+        stage('Abort Previous Build') {
+            agent {
+                label 'built-in'
+            }
+            steps {
+                script {
+                    abortPreviousBuild()
+                }
+            }
+        }
+        
         stage('Build Package') {
             agent {
                 label "cloud-agent-1"
