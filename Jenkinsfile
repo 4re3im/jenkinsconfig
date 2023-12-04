@@ -24,18 +24,18 @@ pipeline {
             }
             steps {
                 script {
-                    def currentBuildNumber = currentBuild.number
+                    def jobName = env.JOB_NAME
+                    def buildNumber = env.BUILD_NUMBER.toInteger()
+                    def currentJob = Jenkins.instance.getItemByFullName(jobName)
 
-                    // Check if there's a previous build
-                    if (currentBuildNumber > 1) {
-                        def previousBuildNumber = currentBuildNumber - 1
-
-                        def build = Jenkins.instance.getItemByFullName(env.JOB_NAME).getBuildByNumber(previousBuildNumber)
-                        if (build != null) {
-                            // Check if the previous build is waiting in the queue
-                            if (build.isBuilding() || build.isInQueue()) {
-                                echo "Aborting previous build (#${previousBuildNumber})"
-                                build.getExecutor().interrupt(Result.ABORTED)
+                    for (def build : currentJob.builds) {
+                        def exec = build.getExecutor()
+                        if (build.isBuilding() && build.number.toInteger() != buildNumber && exec != null) {
+                            exec. interrupt(
+                                Result.ABORTED,
+                                new CauseofInterruption.UserInterruption("Job aborted by #${currentBuild.number}"
+                                )
+                            println("Job aborted previously running build #${build.number}")
                             }
                         }
                     }
