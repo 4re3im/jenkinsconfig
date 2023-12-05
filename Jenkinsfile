@@ -92,7 +92,7 @@ pipeline {
           ]) {
             sh """
             aws s3 sync s3://bnr-jenkins/package-repository/ $WORKSPACE --region eu-west-1
-            /usr/bin/createrepo_c --update $WORKSPACE"""
+            /usr/bin/createrepo_c --update $WORKSPACE
             aws s3 sync $WORKSPACE s3://bnr-jenkins/package-repository/ --delete
             """
           }
