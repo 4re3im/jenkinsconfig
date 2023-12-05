@@ -90,9 +90,11 @@ pipeline {
           withCredentials([
             [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'backoffice-nonprod']
           ]) {
-            sh "aws s3 sync s3://bnr-jenkins/package-repository/ $WORKSPACE --region eu-west-1"
-            sh """/usr/bin/createrepo_c $WORKSPACE"""
-            sh "aws s3 sync $WORKSPACE s3://bnr-jenkins/package-repository/"
+            sh """
+            aws s3 sync s3://bnr-jenkins/package-repository/ $WORKSPACE --region eu-west-1
+            /usr/bin/createrepo_c --update $WORKSPACE"""
+            aws s3 sync $WORKSPACE s3://bnr-jenkins/package-repository/ --delete
+            """
           }
         }
       }
@@ -117,7 +119,7 @@ pipeline {
       steps {
         script {
             withCredentials([sshUserPrivateKey(credentialsId: 'ec2-user', keyFileVariable: 'SSH_KEY')]) {
-            def remoteIp = '34.242.227.130'
+            def remoteIp = '3.254.230.59'
             sh """
             ssh -o StrictHostKeyChecking=no -l ec2-user -i \${SSH_KEY} $remoteIp 'whoami'
             ssh -l ec2-user -i \${SSH_KEY} $remoteIp 'sudo yum clean all'
