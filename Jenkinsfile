@@ -93,9 +93,9 @@ pipeline {
             sh """
             aws s3 sync s3://bnr-jenkins/package-repository/ $WORKSPACE --region eu-west-1
             /usr/bin/createrepo_c --update $WORKSPACE
-            find $WORKSPACE -type f -name '*.rpm' -mmin +60 -delete
-            find $WORKSPACE/repodata -type f -name '*.gz' -mmin +60 -delete
-            find $WORKSPACE/repodata -type f -name '*.bz2' -mmin +60 -delete
+            find $WORKSPACE -type f -name '*.rpm' -mtime +15 -delete
+            find $WORKSPACE/repodata -type f -name '*.gz' -mtime +15 -delete
+            find $WORKSPACE/repodata -type f -name '*.bz2' -mtime +15 -delete
             aws s3 sync $WORKSPACE s3://bnr-jenkins/package-repository/ --delete
             """
           }
