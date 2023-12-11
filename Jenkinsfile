@@ -122,7 +122,7 @@ pipeline {
       steps {
         script {
             withCredentials([sshUserPrivateKey(credentialsId: 'ec2-user', keyFileVariable: 'SSH_KEY')]) {
-            def remoteIp = '54.246.29.66'
+            def remoteIp = '3.254.230.59'
             sh """
             ssh -o StrictHostKeyChecking=no -l ec2-user -i \${SSH_KEY} $remoteIp 'whoami'
             ssh -l ec2-user -i \${SSH_KEY} $remoteIp 'sudo yum clean all'
@@ -145,12 +145,4 @@ pipeline {
       }
     }
   }
-  post {
-        always {
-            emailext( attachLog: true,
-            body: '$DEFAULT_CONTENT', 
-            subject: '$PROJECT_NAME Pipeline - Job # $BUILD_NUMBER - $BUILD_STATUS!', 
-            to: '$DEFAULT_RECIPIENTS')
-        }
-    }
 }
