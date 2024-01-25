@@ -6,7 +6,7 @@ pipeline {
   }
 
   stages {
-    /*
+    
     // This cleanup will only be used when the label 'built-in' is used 
     stage('Initial Clean Workspace') {
         agent {
@@ -16,7 +16,7 @@ pipeline {
             cleanWs()
         }
     }
-    */
+    
 
     stage('Abort Previous Build') {
       agent {
@@ -44,7 +44,7 @@ pipeline {
 
     stage('Build Package') {
       agent {
-        label "cloud-agent-1"
+        label "built-in"
       }
       steps {
         script {
